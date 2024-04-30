@@ -1,0 +1,56 @@
+#!/bin/bash
+
+while true; do
+
+	# xbacklight
+	backlight=$(xbacklight -get)
+	brightness=" $backlight%"
+
+	# audio
+
+	# alsa
+	#vol=$(amixer sget Master | grep Mono | tr -d '[]' | awk 'NR==2 {printf "󰕾 %s [%s]", $4, $6}')
+
+	# pulse
+	volume=$(pulsemixer --get-volume | awk '{print $1}')
+	muted=$(pulsemixer --get-mute)
+	[ $muted -eq 1 ] && vol="󰖁 muted" || vol="󰕾 $volume%"
+
+	# disk
+
+	dtotal=$(df -h / | awk 'NR==2 {print $2}')
+	dused=$(df -h / | awk 'NR==2 {print $3}')
+	dpercent=$(df -h / | awk 'NR==2 {print $5}')
+	disk=" $dused/$dtotal ($dpercent)"
+
+	# ram
+
+	rtotal=$(free -m | awk '/^Speicher:/ {printf "%3.1fG", $2/1000}')
+	rused=$(free -m | awk '/^Speicher:/ {print $3}')
+	rpercent=$(free -m | awk '/^Speicher:/ {printf "%3.1f%%", $3/$2*100}')
+	[ $rused -gt 1000 ] && rused=$(echo $rused | awk '{printf "%3.1fG", $1/1000}') || rused=$(echo $rused | awk '{printf "%3.0fM", $1}')
+	ram=" $rused/$rtotal ($rpercent)"
+
+	# cpu
+
+	cpu=$(top -bn 1 | awk '/^%CPU/ {printf "󰻠 %3.1f%%", $2+$4}')
+
+	# battery
+
+	charg=$(acpi | cut -d " " -f 3)
+	case $charg in
+	'Charging,') bat=$(echo "󰢞$(acpi | cut -d ',' -f 2) [$(acpi | cut -d ' ' -f 5)]") ;;
+	'Discharging,') bat=$(echo "󰂀$(acpi | cut -d ',' -f 2) [$(acpi | cut -d ' ' -f 5)]") ;;
+	'Full,') bat=$(echo "󰁹$(acpi | cut -d ',' -f 2)") ;;
+	esac
+
+	# date
+
+	date=$(date +' %-H:%M, %-d.%-m.%Y')
+
+	# set status
+
+	xsetroot -name "$brightness | $vol | $disk | $ram | $bat | $date    "
+	sleep 1
+
+done

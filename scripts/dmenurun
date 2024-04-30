@@ -1,0 +1,4 @@
+#!/bin/sh
+
+IFS=:
+stest -flx $PATH | sort -u | dmenu -Y 37 -X 12 -W 1896 -l 18 -i | ${SHELL:-"/bin/bash"} &
